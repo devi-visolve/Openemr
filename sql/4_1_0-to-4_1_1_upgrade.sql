@@ -138,7 +138,9 @@ CREATE TABLE `product_warehouse` (
 ALTER TABLE `billing` ADD `notecodes` varchar(25) NOT NULL default '';
 #EndIf
 
-
+#IfNotIndex openemr_postcalendar_events pc_eventDate,pc_endDate
+CREATE INDEX `basic_event_dates` ON `openemr_postcalendar_events` (`pc_eventDate`,`pc_endDate`);
+#EndIf
 
 #IfNotTable dated_reminders
 CREATE TABLE `dated_reminders` (
