@@ -950,8 +950,6 @@ CREATE TABLE `facility` (
   `postal_code` varchar(11) default NULL,
   `country_code` varchar(10) default NULL,
   `federal_ein` varchar(15) default NULL,
-  `website` varchar(255) default NULL,
-  `email` varchar(255) default NULL,
   `service_location` tinyint(1) NOT NULL default '1',
   `billing_location` tinyint(1) NOT NULL default '0',
   `accepts_assignment` tinyint(1) NOT NULL default '0',
@@ -970,7 +968,7 @@ CREATE TABLE `facility` (
 -- Dumping data for table `facility`
 -- 
 
-INSERT INTO `facility` VALUES (3, 'Your Clinic Name Here', '000-000-0000', '000-000-0000', '', '', '', '', '', '', NULL, NULL, 1, 1, 0, NULL, '', '', '', '', '','#99FFFF','0');
+INSERT INTO `facility` VALUES (3, 'Your Clinic Name Here', '000-000-0000', '000-000-0000', '', '', '', '', '', '', 1, 1, 0, NULL, '', '', '', '', '','#99FFFF','0');
 
 -- --------------------------------------------------------
 
@@ -2829,7 +2827,6 @@ INSERT INTO list_options ( list_id, option_id, title, seq, is_default ) VALUES (
 INSERT INTO list_options ( list_id, option_id, title, seq, is_default ) VALUES ('payment_method', 'check_payment', 'Check Payment', 10, 0);
 INSERT INTO list_options ( list_id, option_id, title, seq, is_default ) VALUES ('payment_method', 'credit_card', 'Credit Card', 30, 0);
 INSERT INTO list_options ( list_id, option_id, title, seq, is_default ) VALUES ('payment_method', 'electronic', 'Electronic', 40, 0);
-insert into `list_options` (`list_id`, `option_id`, `title`, `seq`, `is_default`, `option_value`, `mapping`, `notes`) values('payment_method','authorize_net','Authorize.net','60','0','0','','');
 
 INSERT INTO list_options ( list_id, option_id, title, seq, is_default ) VALUES ('lists'   ,'payment_sort_by','Payment Sort By', 1,0);
 INSERT INTO list_options ( list_id, option_id, title, seq, is_default ) VALUES ('payment_sort_by', 'check_date', 'Check Date', 20, 0);
@@ -3267,9 +3264,6 @@ INSERT INTO `list_options` (`list_id`, `option_id`, `title`, `seq`) VALUES ('nat
 INSERT INTO `list_options` (`list_id`, `option_id`, `title`, `seq`) VALUES ('nation_notes_replace_buttons','No','No',20);
 INSERT INTO `list_options` (`list_id`, `option_id`, `title`, `seq`) VALUES ('nation_notes_replace_buttons','Normal','Normal',30);
 INSERT INTO `list_options` (`list_id`, `option_id`, `title`, `seq`) VALUES ('nation_notes_replace_buttons','Abnormal','Abnormal',40);
-insert into `list_options` (`list_id`, `option_id`, `title`, `seq`, `is_default`, `option_value`, `mapping`, `notes`) values('lists','payment_gateways','Payment Gateways','297','1','0','','');
-insert into `list_options` (`list_id`, `option_id`, `title`, `seq`, `is_default`, `option_value`, `mapping`, `notes`) values('payment_gateways','authorize_net','Authorize.net','1','0','0','','');
-
 -- --------------------------------------------------------
 
 -- 
@@ -3538,7 +3532,8 @@ CREATE TABLE `openemr_postcalendar_events` (
   `pc_sendalertemail` VARCHAR( 3 ) NOT NULL DEFAULT 'NO',
   `pc_billing_location` SMALLINT (6) NOT NULL DEFAULT '0',
   PRIMARY KEY  (`pc_eid`),
-  KEY `basic_event` (`pc_catid`,`pc_aid`,`pc_eventDate`,`pc_endDate`,`pc_eventstatus`,`pc_sharing`,`pc_topic`)
+  KEY `basic_event` (`pc_catid`,`pc_aid`,`pc_eventDate`,`pc_endDate`,`pc_eventstatus`,`pc_sharing`,`pc_topic`),
+  KEY `basic_event_dates` (`pc_eventDate`,`pc_endDate`)
 ) ENGINE=MyISAM AUTO_INCREMENT=7 ;
 
 -- 
@@ -3755,7 +3750,6 @@ CREATE TABLE  `patient_access_offsite` (
   `portal_username` varchar(100) NOT NULL,
   `portal_pwd` varchar(100) NOT NULL,
   `portal_pwd_status` tinyint(4) DEFAULT '1' COMMENT '0=>Password Created Through Demographics by The provider or staff. Patient Should Change it at first time it.1=>Pwd updated or created by patient itself',
-  `authorize_net_id` VARCHAR(20) COMMENT 'authorize.net profile id',
   PRIMARY KEY (`id`),
   UNIQUE KEY `pid` (`pid`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1;
@@ -3780,20 +3774,6 @@ CREATE TABLE `payments` (
   PRIMARY KEY  (`id`),
   KEY `pid` (`pid`)
 ) ENGINE=MyISAM AUTO_INCREMENT=1 ;
-
--- --------------------------------------------------------
-
---
--- Table structure for table `payment_gateway_details`
---
-CREATE TABLE `payment_gateway_details` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `service_name` varchar(100) DEFAULT NULL,
-  `login_id` varchar(255) DEFAULT NULL,
-  `transaction_key` varchar(255) DEFAULT NULL,
-  `md5` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB;
 
 -- --------------------------------------------------------
 
@@ -5107,18 +5087,12 @@ CREATE TABLE code_types (
   ct_rel  tinyint(1)  NOT NULL default 0 COMMENT '1 if can relate to other code types',
   ct_nofs tinyint(1)  NOT NULL default 0 COMMENT '1 if to be hidden in the fee sheet',
   ct_diag tinyint(1)  NOT NULL default 0 COMMENT '1 if this is a diagnosis type',
-  ct_active tinyint(1) NOT NULL default 1 COMMENT '1 if this is active',
-  ct_label varchar(31) NOT NULL default '' COMMENT 'label of this code type',
-  ct_external tinyint(1) NOT NULL default 0 COMMENT '0 if stored codes in codes tables, 1 or greater if codes stored in external tables',
   PRIMARY KEY (ct_key)
 ) ENGINE=MyISAM;
-INSERT INTO code_types (ct_key, ct_id, ct_seq, ct_mod, ct_just, ct_fee, ct_rel, ct_nofs, ct_diag, ct_active, ct_label, ct_external ) VALUES ('ICD9' , 2, 1, 2, ''    , 0, 0, 0, 1, 1, 'ICD9', 0);
-INSERT INTO code_types (ct_key, ct_id, ct_seq, ct_mod, ct_just, ct_fee, ct_rel, ct_nofs, ct_diag, ct_active, ct_label, ct_external ) VALUES ('CPT4' , 1, 2, 12, 'ICD9', 1, 0, 0, 0, 1, 'CPT4', 0);
-INSERT INTO code_types (ct_key, ct_id, ct_seq, ct_mod, ct_just, ct_fee, ct_rel, ct_nofs, ct_diag, ct_active, ct_label, ct_external ) VALUES ('HCPCS', 3, 3, 12, 'ICD9', 1, 0, 0, 0, 1, 'HCPCS', 0);
-INSERT INTO code_types (ct_key, ct_id, ct_seq, ct_mod, ct_just, ct_fee, ct_rel, ct_nofs, ct_diag, ct_active, ct_label, ct_external ) VALUES ('CVX'  , 100, 100, 0, '', 0, 0, 1, 0, 1, 'CVX', 0);
-INSERT INTO code_types (ct_key, ct_id, ct_seq, ct_mod, ct_just, ct_fee, ct_rel, ct_nofs, ct_diag, ct_active, ct_label, ct_external ) VALUES ('DSMIV' , 101, 101, 2, '', 0, 0, 0, 1, 0, 'DSMIV', 0);
-INSERT INTO code_types (ct_key, ct_id, ct_seq, ct_mod, ct_just, ct_fee, ct_rel, ct_nofs, ct_diag, ct_active, ct_label, ct_external ) VALUES ('ICD10' , 102, 102, 2, '', 0, 0, 0, 1, 0, 'ICD10', 1);
-INSERT INTO code_types (ct_key, ct_id, ct_seq, ct_mod, ct_just, ct_fee, ct_rel, ct_nofs, ct_diag, ct_active, ct_label, ct_external ) VALUES ('SNOMED' , 103, 103, 2, '', 0, 0, 0, 1, 0, 'SNOMED', 2);
+INSERT INTO code_types (ct_key, ct_id, ct_seq, ct_mod, ct_just, ct_fee, ct_rel, ct_nofs, ct_diag ) VALUES ('ICD9' , 2, 1, 2, ''    , 0, 0, 0, 1);
+INSERT INTO code_types (ct_key, ct_id, ct_seq, ct_mod, ct_just, ct_fee, ct_rel, ct_nofs, ct_diag ) VALUES ('CPT4' , 1, 2, 12, 'ICD9', 1, 0, 0, 0);
+INSERT INTO code_types (ct_key, ct_id, ct_seq, ct_mod, ct_just, ct_fee, ct_rel, ct_nofs, ct_diag ) VALUES ('HCPCS', 3, 3, 12, 'ICD9', 1, 0, 0, 0);
+INSERT INTO code_types (ct_key, ct_id, ct_seq, ct_mod, ct_just, ct_fee, ct_rel, ct_nofs, ct_diag ) VALUES ('CVX'  , 100, 100, 0, '', 0, 0, 1, 0);
 
 INSERT INTO list_options ( list_id, option_id, title, seq ) VALUES ('lists', 'code_types', 'Code Types', 1);
 

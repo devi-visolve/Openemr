@@ -138,7 +138,9 @@ CREATE TABLE `product_warehouse` (
 ALTER TABLE `billing` ADD `notecodes` varchar(25) NOT NULL default '';
 #EndIf
 
-
+#IfNotIndex openemr_postcalendar_events pc_eventDate,pc_endDate
+CREATE INDEX `basic_event_dates` ON `openemr_postcalendar_events` (`pc_eventDate`,`pc_endDate`);
+#EndIf
 
 #IfNotTable dated_reminders
 CREATE TABLE `dated_reminders` (
@@ -171,82 +173,3 @@ CREATE TABLE `dated_reminders_link` (
 #IfMissingColumn x12_partners x12_gs03
 ALTER TABLE `x12_partners` ADD COLUMN `x12_gs03` VARCHAR(15) NOT NULL DEFAULT '';
 #EndIf
-
-#IfNotTable payment_gateway_details
-CREATE TABLE `payment_gateway_details` (
-  `id` int(11) NOT NULL AUTO_INCREMENT,
-  `service_name` varchar(100) DEFAULT NULL,
-  `login_id` varchar(255) DEFAULT NULL,
-  `transaction_key` varchar(255) DEFAULT NULL,
-  `md5` varchar(255) DEFAULT NULL,
-  PRIMARY KEY (`id`)
-) ENGINE=InnoDB;
-#EndIf
-
-#IfNotRow2D list_options list_id lists option_id payment_gateways
-insert into `list_options` (`list_id`, `option_id`, `title`, `seq`, `is_default`, `option_value`, `mapping`, `notes`) values('lists','payment_gateways','Payment Gateways','297','1','0','','');
-insert into `list_options` (`list_id`, `option_id`, `title`, `seq`, `is_default`, `option_value`, `mapping`, `notes`) values('payment_gateways','authorize_net','Authorize.net','1','0','0','','');
-#EndIf
-
-#IfNotRow2D list_options list_id payment_method option_id authorize_net
-insert into `list_options` (`list_id`, `option_id`, `title`, `seq`, `is_default`, `option_value`, `mapping`, `notes`) values('payment_method','authorize_net','Authorize.net','60','0','0','','');
-#EndIf
-
-#IfMissingColumn patient_access_offsite authorize_net_id
-ALTER TABLE `patient_access_offsite` ADD COLUMN `authorize_net_id` VARCHAR(20) COMMENT 'authorize.net profile id';
-#EndIf
-
-#IfMissingColumn facility website
-ALTER TABLE `facility` ADD COLUMN `website` varchar(255) default NULL;
-#EndIf
-
-#IfMissingColumn facility email
-ALTER TABLE `facility` ADD COLUMN `email` varchar(255) default NULL;
-#EndIf
-
-#IfMissingColumn code_types ct_active
-ALTER TABLE `code_types` ADD COLUMN `ct_active` tinyint(1) NOT NULL default 1 COMMENT '1 if this is active';
-#EndIf
-
-#IfMissingColumn code_types ct_label
-ALTER TABLE `code_types` ADD COLUMN `ct_label` varchar(31) NOT NULL default '' COMMENT 'label of this code type';
-UPDATE `code_types` SET ct_label = ct_key;
-#EndIf
-
-#IfMissingColumn code_types ct_external
-ALTER TABLE `code_types` ADD COLUMN `ct_external` tinyint(1) NOT NULL default 0 COMMENT '0 if stored codes in codes tables, 1 or greater if codes stored in external tables';
-#EndIf
-
-#IfNotRow code_types ct_key DSMIV
-DROP TABLE IF EXISTS `temp_table_one`;
-CREATE TABLE `temp_table_one` (
-  `id` int(11) NOT NULL DEFAULT '0',
-  `seq` int(11) NOT NULL DEFAULT '0'
-) ENGINE=MyISAM ;
-INSERT INTO `temp_table_one` (`id`, `seq`) VALUES ( IF( ((SELECT MAX(`ct_id`) FROM `code_types`)>=100), ((SELECT MAX(`ct_id`) FROM `code_types`) + 1), 100 ) , IF( ((SELECT MAX(`ct_seq`) FROM `code_types`)>=100), ((SELECT MAX(`ct_seq`) FROM `code_types`) + 1), 100 )  );
-INSERT INTO code_types (ct_key, ct_id, ct_seq, ct_mod, ct_just, ct_fee, ct_rel, ct_nofs, ct_diag, ct_active, ct_label, ct_external ) VALUES ('DSMIV' , (SELECT MAX(`id`) FROM `temp_table_one`), (SELECT MAX(`seq`) FROM `temp_table_one`), 2, '', 0, 0, 0, 1, 0, 'DSMIV', 0);
-DROP TABLE `temp_table_one`;
-#EndIf
-
-#IfNotRow code_types ct_key ICD10
-DROP TABLE IF EXISTS `temp_table_one`;
-CREATE TABLE `temp_table_one` (
-  `id` int(11) NOT NULL DEFAULT '0',
-  `seq` int(11) NOT NULL DEFAULT '0'
-) ENGINE=MyISAM ;
-INSERT INTO `temp_table_one` (`id`, `seq`) VALUES ( IF( ((SELECT MAX(`ct_id`) FROM `code_types`)>=100), ((SELECT MAX(`ct_id`) FROM `code_types`) + 1), 100 ) , IF( ((SELECT MAX(`ct_seq`) FROM `code_types`)>=100), ((SELECT MAX(`ct_seq`) FROM `code_types`) + 1), 100 )  );
-INSERT INTO code_types (ct_key, ct_id, ct_seq, ct_mod, ct_just, ct_fee, ct_rel, ct_nofs, ct_diag, ct_active, ct_label, ct_external ) VALUES ('ICD10' , (SELECT MAX(`id`) FROM `temp_table_one`), (SELECT MAX(`seq`) FROM `temp_table_one`), 2, '', 0, 0, 0, 1, 0, 'ICD10', 1);
-DROP TABLE `temp_table_one`;
-#EndIf
-
-#IfNotRow code_types ct_key SNOMED
-DROP TABLE IF EXISTS `temp_table_one`;
-CREATE TABLE `temp_table_one` (
-  `id` int(11) NOT NULL DEFAULT '0',
-  `seq` int(11) NOT NULL DEFAULT '0'
-) ENGINE=MyISAM ;
-INSERT INTO `temp_table_one` (`id`, `seq`) VALUES ( IF( ((SELECT MAX(`ct_id`) FROM `code_types`)>=100), ((SELECT MAX(`ct_id`) FROM `code_types`) + 1), 100 ) , IF( ((SELECT MAX(`ct_seq`) FROM `code_types`)>=100), ((SELECT MAX(`ct_seq`) FROM `code_types`) + 1), 100 )  );
-INSERT INTO code_types (ct_key, ct_id, ct_seq, ct_mod, ct_just, ct_fee, ct_rel, ct_nofs, ct_diag, ct_active, ct_label, ct_external ) VALUES ('SNOMED' , (SELECT MAX(`id`) FROM `temp_table_one`), (SELECT MAX(`seq`) FROM `temp_table_one`), 2, '', 0, 0, 0, 1, 0, 'SNOMED', 2);
-DROP TABLE `temp_table_one`;
-#EndIf
-
