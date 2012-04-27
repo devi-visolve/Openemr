@@ -93,6 +93,11 @@ CREATE INDEX `patient_id` ON `extended_log` (`patient_id`);
 CREATE INDEX `patient_id` ON `prescriptions` (`patient_id`);
 #EndIf
 
+#IfNotIndex openemr_postcalendar_events basic_event_dates
+CREATE INDEX `basic_event_dates` ON `openemr_postcalendar_events` (`pc_eventDate`,`pc_endDate`);
+#EndIf
+
+
 #IfMissingColumn version v_realpatch
 ALTER TABLE `version` ADD COLUMN `v_realpatch` int(11) NOT NULL DEFAULT 0;
 #EndIf
